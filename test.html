@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pomodoro Timer Test</title>
+    <style>
+      body {
+        max-width: 720px;
+        margin: 32px auto;
+        padding: 0 16px;
+        color: #24233a;
+        font-family: system-ui, sans-serif;
+      }
+
+      #result {
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-weight: 700;
+      }
+
+      #result.running {
+        background: #f3f2f8;
+      }
+
+      #result.pass {
+        background: #e4f6e9;
+        color: #176b2c;
+      }
+
+      #result.fail {
+        background: #fde8e7;
+        color: #9c2520;
+      }
+
+      iframe {
+        width: 100%;
+        height: 620px;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Pomodoro Timer Test</h1>
+    <p id="result" class="running" role="status" aria-live="polite">RUNNING: Loading the Pomodoro app…</p>
+    <iframe id="pomodoro-app" src="index.html" title="Pomodoro Timer application"></iframe>
+
+    <script>
+      const result = document.getElementById("result");
+      const appFrame = document.getElementById("pomodoro-app");
+
+      function finishTest(passed, message) {
+        result.className = passed ? "pass" : "fail";
+        result.textContent = `${passed ? "PASS" : "FAIL"}: ${message}`;
+      }
+
+      appFrame.addEventListener("load", () => {
+        try {
+          const appWindow = appFrame.contentWindow;
+          const appDocument = appFrame.contentDocument;
+          let simulatedTick;
+
+          appWindow.playTone = () => {};
+          appWindow.setInterval = (callback) => {
+            simulatedTick = callback;
+            return 1;
+          };
+
+          if (appDocument.getElementById("phase-label").textContent !== "Work") {
+            throw new Error("The app did not start in the Work phase.");
+          }
+
+          const previousSessionCount = appDocument.getElementById("session-count").textContent;
+          const previousStoredSessions = appWindow.localStorage.getItem("completedSessions");
+          try {
+            appDocument.getElementById("start-button").click();
+            if (typeof simulatedTick !== "function") {
+              throw new Error("The app did not start its timer.");
+            }
+
+            for (let second = 0; second < 25 * 60; second += 1) {
+              simulatedTick();
+            }
+
+            const phase = appDocument.getElementById("phase-label").textContent;
+            const time = appDocument.getElementById("time-display").textContent;
+            if (phase !== "Break" || time !== "05:00") {
+              throw new Error(`Expected Break at 05:00; got ${phase} at ${time}.`);
+            }
+          } finally {
+            if (previousStoredSessions === null) {
+              appWindow.localStorage.removeItem("completedSessions");
+            } else {
+              appWindow.localStorage.setItem("completedSessions", previousStoredSessions);
+            }
+            appDocument.getElementById("session-count").textContent = previousSessionCount;
+          }
+
+          finishTest(true, "Work timer reached 00:00 and automatically switched to Break.");
+        } catch (error) {
+          finishTest(false, error.message);
+        }
+      });
+    </script>
+  </body>
+</html>
