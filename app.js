@@ -6,6 +6,7 @@ let currentPhase = "work";
 let remainingSeconds = WORK_DURATION_SECONDS;
 let isRunning = false;
 let completedSessions = 0;
+let audioContext = null;
 
 function init() {}
 
@@ -60,6 +61,7 @@ function switchPhase() {
   remainingSeconds =
     currentPhase === "work" ? WORK_DURATION_SECONDS : BREAK_DURATION_SECONDS;
   updateDisplay(false);
+  playPhaseSound();
 }
 
 function updateDisplay(animateProgress = isRunning) {
@@ -87,7 +89,46 @@ function updateProgress(animate = isRunning) {
   progressBar.setAttribute("aria-valuenow", String(remainingSeconds));
 }
 
-function playPhaseSound() {}
+function playPhaseSound() {
+  playTone(currentPhase === "break" ? 660 : 880, 0.2);
+}
+
+function playButtonSound() {
+  playTone(440, 0.1);
+}
+
+function playTone(frequency, duration) {
+  if (!audioContext) {
+    const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextConstructor) {
+      console.error("Web Audio API is not supported in this browser.");
+      return;
+    }
+
+    audioContext = new AudioContextConstructor();
+  }
+
+  const play = () => {
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const startTime = audioContext.currentTime;
+
+    oscillator.frequency.value = frequency;
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.12, startTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+  };
+
+  if (audioContext.state === "suspended") {
+    audioContext.resume().then(play);
+  } else {
+    play();
+  }
+}
 
 function loadCompletedSessions() {}
 
@@ -95,7 +136,16 @@ function saveCompletedSessions(count) {}
 
 function updateSessionCount() {}
 
-document.getElementById("start-button").addEventListener("click", startTimer);
-document.getElementById("pause-button").addEventListener("click", pauseTimer);
-document.getElementById("reset-button").addEventListener("click", resetTimer);
+document.getElementById("start-button").addEventListener("click", () => {
+  playButtonSound();
+  startTimer();
+});
+document.getElementById("pause-button").addEventListener("click", () => {
+  playButtonSound();
+  pauseTimer();
+});
+document.getElementById("reset-button").addEventListener("click", () => {
+  playButtonSound();
+  resetTimer();
+});
 updateDisplay();
