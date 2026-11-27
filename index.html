@@ -22,6 +22,17 @@
           aria-valuemax="1500"
           aria-valuenow="1500"
         >
+          <svg class="progress-ring" viewBox="0 0 250 250" aria-hidden="true">
+            <circle class="progress-ring-background" cx="125" cy="125" r="115"></circle>
+            <circle
+              class="progress-ring-foreground"
+              id="progress-ring"
+              cx="125"
+              cy="125"
+              r="115"
+              transform="rotate(-90 125 125)"
+            ></circle>
+          </svg>
           <span class="time-display" id="time-display">25:00</span>
         </div>
       </section>
