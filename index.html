@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pomodoro Timer</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="timer-card">
+      <h1>Pomodoro Timer</h1>
+
+      <section class="timer" aria-label="Timer">
+        <p class="phase-label" id="phase-label">Focus session</p>
+        <div
+          class="progress"
+          id="timer-progress"
+          role="progressbar"
+          aria-label="Timer progress"
+          aria-valuemin="0"
+          aria-valuemax="1500"
+          aria-valuenow="1500"
+        >
+          <span class="time-display" id="time-display">25:00</span>
+        </div>
+      </section>
+
+      <div class="controls" role="group" aria-label="Timer controls">
+        <button class="button button-primary" id="start-button" type="button">Start</button>
+        <button class="button" id="pause-button" type="button">Pause</button>
+        <button class="button" id="reset-button" type="button">Reset</button>
+      </div>
+
+      <p class="session-count">
+        Completed work sessions: <span id="session-count">0</span>
+      </p>
+    </main>
+  </body>
+</html>
