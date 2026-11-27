@@ -9,19 +9,65 @@ let completedSessions = 0;
 
 function init() {}
 
-function startTimer() {}
+function startTimer() {
+  if (isRunning || remainingSeconds <= 0) {
+    return;
+  }
 
-function pauseTimer() {}
+  isRunning = true;
+  timerHandle = setInterval(tick, 1000);
+}
 
-function resumeTimer() {}
+function pauseTimer() {
+  if (!isRunning) {
+    return;
+  }
 
-function resetTimer() {}
+  clearInterval(timerHandle);
+  timerHandle = null;
+  isRunning = false;
+}
 
-function tick() {}
+function resumeTimer() {
+  startTimer();
+}
 
-function switchPhase() {}
+function resetTimer() {
+  clearInterval(timerHandle);
+  timerHandle = null;
+  isRunning = false;
+  currentPhase = "work";
+  remainingSeconds = WORK_DURATION_SECONDS;
+  updateDisplay();
+}
 
-function updateDisplay() {}
+function tick() {
+  if (remainingSeconds > 0) {
+    remainingSeconds -= 1;
+  }
+
+  updateDisplay();
+
+  if (remainingSeconds === 0) {
+    switchPhase();
+  }
+}
+
+function switchPhase() {
+  currentPhase = currentPhase === "work" ? "break" : "work";
+  remainingSeconds =
+    currentPhase === "work" ? WORK_DURATION_SECONDS : BREAK_DURATION_SECONDS;
+  updateDisplay();
+}
+
+function updateDisplay() {
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+  document.getElementById("time-display").textContent =
+    `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  document.getElementById("phase-label").textContent =
+    currentPhase === "work" ? "Work" : "Break";
+}
 
 function updateProgress() {}
 
@@ -32,3 +78,7 @@ function loadCompletedSessions() {}
 function saveCompletedSessions(count) {}
 
 function updateSessionCount() {}
+
+document.getElementById("start-button").addEventListener("click", startTimer);
+document.getElementById("pause-button").addEventListener("click", pauseTimer);
+document.getElementById("reset-button").addEventListener("click", resetTimer);
