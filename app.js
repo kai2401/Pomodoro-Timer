@@ -1,5 +1,6 @@
 const WORK_DURATION_SECONDS = 25 * 60;
 const BREAK_DURATION_SECONDS = 5 * 60;
+const COMPLETED_SESSIONS_KEY = "completedSessions";
 
 let timerHandle = null;
 let currentPhase = "work";
@@ -8,7 +9,11 @@ let isRunning = false;
 let completedSessions = 0;
 let audioContext = null;
 
-function init() {}
+function init() {
+  completedSessions = loadCompletedSessions();
+  updateSessionCount();
+  updateDisplay();
+}
 
 function startTimer() {
   if (isRunning || remainingSeconds <= 0) {
@@ -52,7 +57,13 @@ function tick() {
   updateDisplay();
 
   if (remainingSeconds === 0) {
+    const completedWorkSession = currentPhase === "work";
     switchPhase();
+    if (completedWorkSession) {
+      completedSessions += 1;
+      updateSessionCount();
+      saveCompletedSessions(completedSessions);
+    }
   }
 }
 
@@ -130,11 +141,28 @@ function playTone(frequency, duration) {
   }
 }
 
-function loadCompletedSessions() {}
+function loadCompletedSessions() {
+  const storedCount = localStorage.getItem(COMPLETED_SESSIONS_KEY);
+  if (storedCount === null) {
+    return 0;
+  }
 
-function saveCompletedSessions(count) {}
+  const count = Number(storedCount);
+  if (storedCount.trim() === "" || !Number.isSafeInteger(count) || count < 0) {
+    console.warn("Invalid completed session count in localStorage; starting at zero.");
+    return 0;
+  }
 
-function updateSessionCount() {}
+  return count;
+}
+
+function saveCompletedSessions(count) {
+  localStorage.setItem(COMPLETED_SESSIONS_KEY, String(count));
+}
+
+function updateSessionCount() {
+  document.getElementById("session-count").textContent = String(completedSessions);
+}
 
 document.getElementById("start-button").addEventListener("click", () => {
   playButtonSound();
@@ -148,4 +176,4 @@ document.getElementById("reset-button").addEventListener("click", () => {
   playButtonSound();
   resetTimer();
 });
-updateDisplay();
+init();
